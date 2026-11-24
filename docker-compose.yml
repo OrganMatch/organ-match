@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: organ_match_db
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    restart: always
+    expose:
+      - "8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://admin:password123@db:5432/organ_match_db
+
+  caddy:
+    image: caddy:2-alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
